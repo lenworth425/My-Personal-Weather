@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-const apiKey = process.env.API_KEY || '06370a6f4e2c62beed5a0e027339f568';
+const apiKey = process.env.API_KEY || '';
 // TODO: Define an interface for the Coordinates object
 interface Coordinates {
   lat: number;
