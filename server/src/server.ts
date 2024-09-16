@@ -1,7 +1,6 @@
 import dotenv from 'dotenv';
 import express from 'express';
-import logMethod from './middleware/logMethod.js';
-import allRoutes from './routes/index.js';
+//import logMethod from './middleware/logMethod.js';
 dotenv.config();
 
 // Import the routes
