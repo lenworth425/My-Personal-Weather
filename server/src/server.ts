@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import express from 'express';
-//import logMethod from './middleware/logMethod.js';
+import logMethod from './middleware/logMethod.js';
 dotenv.config();
 
 // Import the routes
@@ -17,6 +17,7 @@ app.use(express.json());
 
 app.use(express.urlencoded({ extended: true }));
 // TODO: Implement middleware to connect the routes
+app.use(logMethod);
 app.use(routes);
 
 // Start the server on the port

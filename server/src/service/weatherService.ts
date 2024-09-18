@@ -1,117 +1,112 @@
 import dotenv from 'dotenv';
+import { Dayjs } from 'dayjs';
+import { error } from 'console';
 dotenv.config();
 
+// TODO: Define an interface for the Coordinates object (if you use the GEO API you are not required to)
 const apiKey = process.env.API_KEY || '';
-// TODO: Define an interface for the Coordinates object
-interface Coordinates {
-  lat: number;
-  lon: number;
-}
 
+interface IWeather {
+  city: string;
+  date: Dayjs | string; // you can use dayjs or just a string delete it if you do not
+  tempF: number;
+  windSpeed: number; //response.wind.speed,
+  humidity: number;
+  icon: string;
+  iconDescription: string;
+  }
 // TODO: Define a class for the Weather object
-class Weather {
+class Weather implements IWeather {
+  city: string;
+  date: Dayjs | string;
+  tempF: number;
+  windSpeed: number;
+  humidity: number;
+  icon: string;
+  iconDescription: string;
+
   constructor(
-    public city: string,
-    public date: string,
-    public description: string,
-    public temp: number,
-    public humidity: number,
-    public wind: number
+    city: string,
+    date: Dayjs | string,
+    tempF: number,
+    windSpeed: number,
+    humidity: number,
+    icon: string,
+    iconDescription: string
   ) {
     this.city = city;
     this.date = date;
-    this.description = description;
-    this.temp = temp;
-    this.humidity = humidity; 
-    this.wind = wind;
+    this.tempF = tempF;
+    this.windSpeed = windSpeed;
+    this.humidity = humidity;
+    this.icon = icon;
+    this.iconDescription = iconDescription;
   }
+
+}
+
+interface IWeatherService {
+  date: string;
+  temperature: number;
+  description: string;
+  getWeatherForCity(city: string): Promise<Weather[]>; // this is an async function
 }
 // TODO: Complete the WeatherService class
-class WeatherService {
-  // TODO: Define the baseURL, API key, and city name properties
-  private baseURL: string;
-  private apiKey: string;
-  private cityName: string;
-  constructor() {
-      this.apiKey = apiKey;
-      this.cityName = '';
-      this.baseURL = 'https://api.openweathermap.org';
-  }
+class WeatherService implements IWeatherService {
+  baseUrl: string;
+  apiKey: string;
+  cityName: string;
+  date: string;
+  temperature: number;
+  description: string;
 
-  // TODO: Create fetchLocationData method
-  private async fetchLocationData(query: string) {
-    const response = await fetch(query);
-    if (!response.ok) {
-      throw Error('HTTP error! status: Failed to fetch location data');
+  constructor(apiKey: string) {
+    this.baseUrl = 'https://api.openweathermap.org/data/2.5/forecast';
+    this.apiKey = apiKey;
+    this.cityName = 'Orlando';
+    this.date = '';
+    this.temperature = 0;
+    this.description = '';
+  }
+  
+
+  async getWeatherForCity(_city: string): Promise<Weather[]> {
+    const url = `${this.baseUrl}?q=${_city}&appid=${this.apiKey}`;
+    console.log('url', url);
+    
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+      console.log(data);
+      if (data.cod !== '200') {
+        console.error(`Error fetching weather data: ${data.message}`, error);
+        return [];
+      }
+      console.log('Getting weather for city:', _city);
+      
+      // Filter the data to get the next 5 days
+      const weatherList = data.list.filter((item: any) => {
+        const date = new Date(item.dt * 1000);
+        const today = new Date();
+        return date.getTime() > today.getTime() && date.getTime() <= today.getTime() + (5 * 24 * 60 * 60 * 1000);
+      });
+  
+      // Map the API data to your Weather class
+      return weatherList.map((item: any) => new Weather(
+        _city,
+        new Date(item.dt * 1000).toLocaleDateString(),
+        item.main.temp,
+        item.wind.speed,
+        item.main.humidity,
+        item.weather[0].icon,
+        item.weather[0].description
+      ));
     }
-    return await response.json();
-  }
-  // TODO: Create destructureLocationData method
-  private destructureLocationData(locationData: Coordinates): Coordinates {
-    const { lat, lon } = locationData;
-    return { lat, lon };
-  }
-  // TODO: Create buildGeocodeQuery method
-  private buildGeocodeQuery(): string {
-    return `${this.baseURL}/data/2.5/forecast?q=${this.cityName}&appid=${this.apiKey}`;
-  }
-  // TODO: Create buildWeatherQuery method
-  private buildWeatherQuery(coordinates: Coordinates): string {
-    const { lat, lon } = coordinates;
-    return `${this.baseURL}/data/2.5/onecall?lat=${lat}&lon=${lon}&appid=${this.apiKey}`;
-  }
-  // TODO: Create fetchAndDestructureLocationData method
-  private async fetchAndDestructureLocationData(): Promise<Coordinates> {
-    const query = this.buildGeocodeQuery();
-    const locationData = await this.fetchLocationData(query);
-    return this.destructureLocationData(locationData);
-  }
-  // TODO: Create fetchWeatherData method
-  private async fetchWeatherData(query:string) {
-    const response = await fetch(query);
-    if (!response.ok) {
-      console.error('Fetch error:', response.status, response.statusText)
-      throw Error('HTTP error! status: Failed to fetch weather data');
+    catch (error) {
+      console.error('Error getting weather data', error);
+      return [];
     }
-   return await response.json();
-  }
-  // TODO: Build parseCurrentWeather method
-  private parseCurrentWeather(response: any) {
-    const { current } = response;
-    const { dt, weather, temp, humidity, wind_speed } = current;
-    const { description } = weather[0];
-    return new Weather(
-      this.cityName, 
-      new Date(dt*1000).toISOString(), //help from claud AI 
-      description, 
-      temp, 
-      humidity, 
-      wind_speed);    
-  }
-  // TODO: Complete buildForecastArray method
-  private buildForecastArray(currentWeather: Weather, weatherData: any[]) {
-    const forecastArray = weatherData.map((day: any) => {
-      const { dt, weather, temp, humidity, wind_speed } = day;
-      const { description } = weather[0];
-      return new Weather(
-        this.cityName, 
-        new Date(dt*1000).toISOString(), //help from claud AI 
-        description, 
-        temp, 
-        humidity, 
-        wind_speed);
-    });
-    return [currentWeather, ...forecastArray];
-  }
-  // TODO: Complete getWeatherForCity method
-  async getWeatherForCity(city: string) {
-    this.cityName = city;
-    const coordinates = await this.fetchAndDestructureLocationData();
-    const query = this.buildWeatherQuery(coordinates);
-    const weatherData = await this.fetchWeatherData(query);
-    const currentWeather = this.parseCurrentWeather(weatherData);
-    return this.buildForecastArray(currentWeather, weatherData.daily);
   }
 }
 
-export default new WeatherService();
+export default new WeatherService(apiKey);
