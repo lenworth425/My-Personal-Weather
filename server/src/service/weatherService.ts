@@ -85,17 +85,27 @@ class WeatherService implements IWeatherService {
       console.log('Getting weather for city:', _city);
       
       // Filter the data to get the next 5 days
-      const weatherList = data.list.filter((item: any) => {
-        const date = new Date(item.dt * 1000);
-        const today = new Date();
-        return date.getTime() > today.getTime() && date.getTime() <= today.getTime() + (5 * 24 * 60 * 60 * 1000);
+      let weatherList = data.list.filter((item: any) => {
+        return item.dt_txt.includes('12:00:00');
       });
-  
-      // Map the API data to your Weather class
+      
+      // weatherList = weatherList.map((item: any) => new Weather(
+      //     _city,
+      //     new Date(item.dt * 1000).toLocaleDateString(),
+      //     Math.round(item.main.temp - 273.15) * 9/5 + 32 ,
+      //     item.wind.speed,
+      //     item.main.humidity,
+      //     item.weather[0].icon,
+      //     item.weather[0].description
+      //   ));
+      //   let currentWeather = weatherList[0];
+      //   return [weatherList, currentWeather];
+
+      //Map the API data to your Weather class
       return weatherList.map((item: any) => new Weather(
         _city,
         new Date(item.dt * 1000).toLocaleDateString(),
-        item.main.temp,
+        Math.round(item.main.temp - 273.15) * 9/5 + 32 ,
         item.wind.speed,
         item.main.humidity,
         item.weather[0].icon,
