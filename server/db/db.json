@@ -10,5 +10,13 @@
   {
     "name": "Paris",
     "id": "f2aa9529-40e5-48f9-b279-1c12f14987ae"
+  },
+  {
+    "name": "Boston",
+    "id": "1f1b81f1-812d-441b-a6e4-ee379b42a98a"
+  },
+  {
+    "name": "Oakland",
+    "id": "b71f273b-24ff-4e70-a507-358468f276c9"
   }
 ]

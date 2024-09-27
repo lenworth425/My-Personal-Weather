@@ -44,11 +44,12 @@ const fetchWeather = async (city: string) => {
   });
 
   const weatherData = await response.json();
+  weatherData[2][0].city = city;
 
   console.log('weatherData: ', weatherData);
 
-  renderCurrentWeather(weatherData[0]);
-  renderForecast(weatherData);
+  renderCurrentWeather(weatherData[2][0]);
+  renderForecast(weatherData[2]);
 };
 
 const fetchSearchHistory = async () => {
@@ -77,7 +78,7 @@ Render Functions
 */
 
 const renderCurrentWeather = (currentWeather: any): void => {
-  const { city, date, icon, iconDescription, tempF, windSpeed, humidity } =
+  const {city, date, icon, iconDescription, tempF, windSpeed, humidity} =
     currentWeather;
 
   // convert the following to typescript
@@ -266,6 +267,7 @@ const handleSearchFormSubmit = (event: any): void => {
 const handleSearchHistoryClick = (event: any) => {
   if (event.target.matches('.history-btn')) {
     const city = event.target.textContent;
+    console.log('city: ', city);
     fetchWeather(city).then(getAndRenderHistory);
   }
 };
